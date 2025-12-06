@@ -67,12 +67,10 @@ namespace FastExplorerTest
             // アプリケーションを起動
             var mainWindow = StartApplication();
 
-            // Typical Friendly operations
-            var formControls = mainWindow.AttachFormControls();
-
             // ウィンドウのタイトルを確認
             var title = mainWindow.Dynamic().Title;
             Assert.IsNotNull(title);
+            Assert.IsTrue(title.ToString().Contains("FastExplorer"));
         }
 
         [TestMethod]

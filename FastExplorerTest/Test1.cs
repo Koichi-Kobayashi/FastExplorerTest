@@ -1,12 +1,6 @@
-﻿using System.Diagnostics;
-using System.Linq;
-using Codeer.Friendly;
-using Codeer.Friendly.Dynamic;
-using Codeer.Friendly.Windows;
-using Codeer.Friendly.Windows.Grasp;
-using RM.Friendly.WPFStandardControls;
-using System.Windows;
+﻿using Codeer.Friendly.Dynamic;
 using FastExplorerDriver;
+using RM.Friendly.WPFStandardControls;
 
 namespace FastExplorerTest
 {
@@ -14,7 +8,6 @@ namespace FastExplorerTest
     public sealed class Test1
     {
         AppDriver _app;
-
 
         [TestInitialize]
         public void TestInitialize()
@@ -29,12 +22,15 @@ namespace FastExplorerTest
         }
 
         [TestMethod]
-        public void TestMethod1()
+        public void タイトルの確認()
         {
             // ウィンドウのタイトルを確認
-            var title = _app.MainWindow.Window.Dynamic().Title;
+            var window = new FastExplorerDriver.MainWindowDriver(_app.MainWindow.Core);
+            var title = window.Title;
             Assert.IsNotNull(title);
             Assert.AreEqual("FastExplorer", title.ToString());
+
+            var a = _app.MainWindow.AppVar.VisualTree().ByBinding("Title").Dynamic();
         }
     }
 }

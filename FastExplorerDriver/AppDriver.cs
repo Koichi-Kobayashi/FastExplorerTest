@@ -8,7 +8,7 @@ namespace FastExplorerDriver
     {
         private const string ExePath = @"..\..\..\..\..\FastExplorer\FastExplorer\bin\Debug\net10.0-windows10.0.26100.0\FastExplorer.exe";
 
-        WindowsAppFriend _app;
+        public WindowsAppFriend WindowsAppFriend { get; private set; }
 
         public MainWindowDriver MainWindow { get; private set; }
 
@@ -21,9 +21,9 @@ namespace FastExplorerDriver
             // FastExplorerアプリケーションを起動
             Process process = Process.Start(ExePath);
             // Friendlyでアプリケーションに接続
-            _app = new WindowsAppFriend(process);
+            WindowsAppFriend = new WindowsAppFriend(process);
             // メインウィンドウを取得
-            var window = _app.WaitForIdentifyFromTypeFullName("FastExplorer.Views.Windows.MainWindow");
+            var window = WindowsAppFriend.WaitForIdentifyFromTypeFullName("FastExplorer.Views.Windows.MainWindow");
             MainWindow = new MainWindowDriver(window);
         }
 
@@ -31,8 +31,8 @@ namespace FastExplorerDriver
         {
             try
             {
-                Process.GetProcessById(_app.ProcessId).CloseMainWindow();
-                _app?.Dispose();
+                Process.GetProcessById(WindowsAppFriend.ProcessId).CloseMainWindow();
+                WindowsAppFriend?.Dispose();
             }
             catch
             {

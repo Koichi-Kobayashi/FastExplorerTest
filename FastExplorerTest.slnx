@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="FastExplorerDriver/FastExplorerDriver.csproj" Id="8cf9015a-a8cb-4a6d-8138-a7d824d8129d" />
   <Project Path="FastExplorerTest/FastExplorerTest.csproj" />
 </Solution>

@@ -5,7 +5,7 @@ using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
 
-namespace FastExplorerTest
+namespace FastExplorerDriver
 {
     /// <summary>
     /// IntPtr用のMessagePackフォーマッター

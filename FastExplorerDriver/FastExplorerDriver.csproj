@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;NU1701</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;NU1701</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Codeer.Friendly" Version="2.7.0" />
+    <PackageReference Include="Codeer.Friendly.Windows" Version="2.18.0" />
+    <PackageReference Include="Codeer.Friendly.Windows.Grasp" Version="2.16.0" />
+    <PackageReference Include="Codeer.Friendly.Windows.NativeStandardControls" Version="2.18.0" />
+    <PackageReference Include="MessagePack" Version="3.1.4" />
+    <PackageReference Include="RM.Friendly.WPFStandardControls" Version="1.61.0" />
+  </ItemGroup>
+
+</Project>

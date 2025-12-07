@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Codeer.Friendly;
@@ -21,8 +21,8 @@ namespace FastExplorerDriver
             Core = core;
             AppVar = core.AppVar;
 
-            // ここで落ちる
-            Title = Core.VisualTree().ByBinding("Title").Single().Dynamic();
+            // ウィンドウのタイトルを取得（AppVarから直接取得）
+            Title = (string)AppVar.Dynamic().Title;
         }
     }
 }

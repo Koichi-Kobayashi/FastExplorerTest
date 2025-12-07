@@ -25,12 +25,10 @@ namespace FastExplorerTest
         public void タイトルの確認()
         {
             // ウィンドウのタイトルを確認
-            var window = new FastExplorerDriver.MainWindowDriver(_app.MainWindow.Core);
+            var window = new MainWindowDriver(_app.MainWindow.Core);
             var title = window.Title;
             Assert.IsNotNull(title);
             Assert.AreEqual("FastExplorer", title.ToString());
-
-            var a = _app.MainWindow.AppVar.VisualTree().ByBinding("Title").Dynamic();
         }
     }
 }

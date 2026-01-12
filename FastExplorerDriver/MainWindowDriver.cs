@@ -52,6 +52,34 @@ namespace FastExplorerDriver
             return d.ViewModel;
         }
 
+        private dynamic GetCurrentExplorerTab()
+        {
+            dynamic vm = GetExplorerPageViewModel();
+
+            dynamic? targetTab = null;
+            bool isSplit = (bool)vm.IsSplitPaneEnabled;
+            if (isSplit)
+            {
+                int activePane = (int)vm.ActivePane;
+                targetTab = activePane == 0 ? vm.SelectedLeftPaneTab : vm.SelectedRightPaneTab;
+            }
+            else
+            {
+                targetTab = vm.SelectedTab;
+            }
+
+            if (targetTab == null)
+                throw new InvalidOperationException("Selected tab is null.");
+
+            return targetTab;
+        }
+
+        private dynamic GetCurrentExplorerTabViewModel()
+        {
+            dynamic tab = GetCurrentExplorerTab();
+            return tab.ViewModel;
+        }
+
         private AppVar GetExplorerPageAppVar()
         {
             var page = FindByTypeFullName("FastExplorer.Views.Pages.ExplorerPage");
@@ -74,47 +102,38 @@ namespace FastExplorerDriver
         {
             if (string.IsNullOrWhiteSpace(path))
                 throw new ArgumentException("Path is empty.", nameof(path));
-
-            dynamic vm = GetExplorerPageViewModel();
-
-            dynamic? targetTab = null;
-            bool isSplit = (bool)vm.IsSplitPaneEnabled;
-            if (isSplit)
-            {
-                int activePane = (int)vm.ActivePane;
-                targetTab = activePane == 0 ? vm.SelectedLeftPaneTab : vm.SelectedRightPaneTab;
-            }
-            else
-            {
-                targetTab = vm.SelectedTab;
-            }
-
-            if (targetTab == null)
-                throw new InvalidOperationException("Selected tab is null.");
-
-            targetTab.ViewModel.NavigateToPathCommand.Execute(path);
+            dynamic tabVm = GetCurrentExplorerTabViewModel();
+            tabVm.NavigateToPathCommand.Execute(path);
         }
 
         public string? GetCurrentPath()
         {
-            dynamic vm = GetExplorerPageViewModel();
+            dynamic tabVm = GetCurrentExplorerTabViewModel();
+            return (string)tabVm.CurrentPath;
+        }
 
-            dynamic? targetTab = null;
-            bool isSplit = (bool)vm.IsSplitPaneEnabled;
-            if (isSplit)
-            {
-                int activePane = (int)vm.ActivePane;
-                targetTab = activePane == 0 ? vm.SelectedLeftPaneTab : vm.SelectedRightPaneTab;
-            }
-            else
-            {
-                targetTab = vm.SelectedTab;
-            }
+        public void SetSearchText(string text)
+        {
+            dynamic tabVm = GetCurrentExplorerTabViewModel();
+            tabVm.SearchText = text ?? string.Empty;
+        }
 
-            if (targetTab == null)
-                return null;
+        public string GetSearchText()
+        {
+            dynamic tabVm = GetCurrentExplorerTabViewModel();
+            return (string)tabVm.SearchText;
+        }
 
-            return (string)targetTab.ViewModel.CurrentPath;
+        public bool GetCanGoBack()
+        {
+            dynamic tabVm = GetCurrentExplorerTabViewModel();
+            return (bool)tabVm.CanGoBack;
+        }
+
+        public bool GetCanGoForward()
+        {
+            dynamic tabVm = GetCurrentExplorerTabViewModel();
+            return (bool)tabVm.CanGoForward;
         }
     }
 }

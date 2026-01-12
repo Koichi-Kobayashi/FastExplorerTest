@@ -35,6 +35,9 @@ namespace FastExplorerDriver
         public WpfNamedButtonDriver CopyPath => new WpfNamedButtonDriver(_app, _searchRoot, _isSinglePane ? "CopyPathButtonNormal" : "CopyPathButton");
         public WpfNamedButtonDriver TogglePreview => new WpfNamedButtonDriver(_app, _searchRoot, _isSinglePane ? "TogglePreviewButtonNormal" : "TogglePreviewButton");
         public WpfNamedButtonDriver ViewMode => new WpfNamedButtonDriver(_app, _searchRoot, _isSinglePane ? "ViewModeButtonNormal" : "ViewModeButton");
+
+        // Search
+        public WpfNamedButtonDriver ClearSearch => new WpfNamedButtonDriver(_app, _searchRoot, _isSinglePane ? "ClearSearchButtonNormal" : "ClearSearchButton");
     }
 }
 

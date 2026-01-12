@@ -42,6 +42,47 @@ namespace FastExplorerDriver
 
         public WpfNamedButtonDriver ClearSearchButton => new WpfNamedButtonDriver(_app, _page, "ClearSearchButton");
 
+        public bool GetIsPreviewPaneVisibleActive()
+        {
+            dynamic vm = GetExplorerPageViewModel();
+            dynamic tabVm = GetActivePaneTabViewModel(vm);
+            return (bool)tabVm.IsPreviewPaneVisible;
+        }
+
+        public bool GetIsPreviewPaneVisibleLeft()
+        {
+            dynamic vm = GetExplorerPageViewModel();
+            if (!IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is not enabled.");
+            dynamic tabVm = vm.SelectedLeftPaneTab.ViewModel;
+            return (bool)tabVm.IsPreviewPaneVisible;
+        }
+
+        public bool GetIsPreviewPaneVisibleRight()
+        {
+            dynamic vm = GetExplorerPageViewModel();
+            if (!IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is not enabled.");
+            dynamic tabVm = vm.SelectedRightPaneTab.ViewModel;
+            return (bool)tabVm.IsPreviewPaneVisible;
+        }
+
+        public string? GetCurrentPathLeft()
+        {
+            dynamic vm = GetExplorerPageViewModel();
+            if (!IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is not enabled.");
+            return (string)vm.SelectedLeftPaneTab.ViewModel.CurrentPath;
+        }
+
+        public string? GetCurrentPathRight()
+        {
+            dynamic vm = GetExplorerPageViewModel();
+            if (!IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is not enabled.");
+            return (string)vm.SelectedRightPaneTab.ViewModel.CurrentPath;
+        }
+
         public AppVar? FindByName(string name)
         {
             dynamic finder = _app.Type<VisualTreeSearch>();
@@ -53,6 +94,29 @@ namespace FastExplorerDriver
             dynamic d = _page.Dynamic();
             dynamic vm = d.ViewModel;
             return (bool)vm.IsSplitPaneEnabled;
+        }
+
+        private dynamic GetExplorerPageViewModel()
+        {
+            dynamic d = _page.Dynamic();
+            return d.ViewModel;
+        }
+
+        private static dynamic GetActivePaneTabViewModel(dynamic explorerPageViewModel)
+        {
+            // ExplorerPage.xaml.cs の ActivePane は 0=Left / 2=Right
+            int activePane = (int)explorerPageViewModel.ActivePane;
+            dynamic? tab = null;
+            if (activePane == 0)
+                tab = explorerPageViewModel.SelectedLeftPaneTab;
+            else if (activePane == 2)
+                tab = explorerPageViewModel.SelectedRightPaneTab;
+            else
+                tab = explorerPageViewModel.SelectedTab;
+
+            if (tab == null)
+                throw new InvalidOperationException("Selected tab is null.");
+            return tab.ViewModel;
         }
 
         private AppVar GetActivePaneTabControlRoot()

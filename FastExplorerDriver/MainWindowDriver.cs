@@ -17,6 +17,7 @@ namespace FastExplorerDriver
         public WPFTabControl? Tab { get; private set; }
         public AppVar AppVar { get; private set; }
         public string Title { get; private set; }
+        public ExplorerPageDriver ExplorerPage => new ExplorerPageDriver(_app, GetExplorerPageAppVar());
 
         public MainWindowDriver(WindowsAppFriend app, WindowControl core)
         {
@@ -49,6 +50,14 @@ namespace FastExplorerDriver
 
             dynamic d = page.Dynamic();
             return d.ViewModel;
+        }
+
+        private AppVar GetExplorerPageAppVar()
+        {
+            var page = FindByTypeFullName("FastExplorer.Views.Pages.ExplorerPage");
+            if (page == null)
+                throw new InvalidOperationException("ExplorerPage was not found in visual tree.");
+            return page;
         }
 
         public int? GetBreadcrumbPanelChildrenCount()

@@ -50,6 +50,29 @@ namespace FastExplorerDriver
             }
         }
 
+        public WindowControl WaitForWindow(string typeFullName)
+        {
+            return WindowsAppFriend.WaitForIdentifyFromTypeFullName(typeFullName);
+        }
+
+        public TagCreateDialogDriver WaitForTagCreateDialog()
+            => new TagCreateDialogDriver(WindowsAppFriend, WaitForWindow("FastExplorer.Views.Windows.TagCreateDialog"));
+
+        public TagEditDialogDriver WaitForTagEditDialog()
+            => new TagEditDialogDriver(WindowsAppFriend, WaitForWindow("FastExplorer.Views.Windows.TagEditDialog"));
+
+        public TagKeyEditDialogDriver WaitForTagKeyEditDialog()
+            => new TagKeyEditDialogDriver(WindowsAppFriend, WaitForWindow("FastExplorer.Views.Windows.TagKeyEditDialog"));
+
+        public ColorPickerDialogDriver WaitForColorPickerDialog()
+            => new ColorPickerDialogDriver(WindowsAppFriend, WaitForWindow("FastExplorer.Views.Windows.ColorPickerDialog"));
+
+        public TaggedFilesListDialogDriver WaitForTaggedFilesListDialog()
+            => new TaggedFilesListDialogDriver(WindowsAppFriend, WaitForWindow("FastExplorer.Views.Windows.TaggedFilesListDialog"));
+
+        public PropertiesDialogDriver WaitForPropertiesDialog()
+            => new PropertiesDialogDriver(WindowsAppFriend, WaitForWindow("FastExplorer.Views.Windows.PropertiesDialog"));
+
         private static string ResolveExePath()
         {
             // テスト実行場所（bin/Debug/...）を基準に FastExplorer のビルド成果物を探す。

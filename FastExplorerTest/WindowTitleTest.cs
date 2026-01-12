@@ -1,13 +1,12 @@
-﻿using Codeer.Friendly.Dynamic;
-using FastExplorerDriver;
-using RM.Friendly.WPFStandardControls;
+﻿using FastExplorerDriver;
+using System.Windows;
 
 namespace FastExplorerTest
 {
     [TestClass]
-    public sealed class Test1
+    public sealed class WindowTitleTest
     {
-        AppDriver _app;
+        AppDriver _app = null!;
 
         [TestInitialize]
         public void TestInitialize()
@@ -25,10 +24,9 @@ namespace FastExplorerTest
         public void タイトルの確認()
         {
             // ウィンドウのタイトルを確認
-            var window = new MainWindowDriver(_app.MainWindow.Core);
-            var title = window.Title;
+            var title = _app.MainWindow.Title;
             Assert.IsNotNull(title);
-            Assert.AreEqual("FastExplorer", title.ToString());
+            Assert.AreEqual("Fast Explorer", title.ToString());
         }
     }
 }

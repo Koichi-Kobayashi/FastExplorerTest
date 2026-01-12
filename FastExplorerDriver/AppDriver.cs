@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Codeer.Friendly.Windows;
 using Codeer.Friendly.Windows.Grasp;
 
@@ -6,7 +9,7 @@ namespace FastExplorerDriver
 {
     public class AppDriver
     {
-        private const string ExePath = @"..\..\..\..\..\FastExplorer\FastExplorer\bin\Debug\net10.0-windows10.0.26100.0\FastExplorer.exe";
+        private static readonly string ExePath = ResolveExePath();
 
         public WindowsAppFriend WindowsAppFriend { get; private set; }
 
@@ -19,12 +22,19 @@ namespace FastExplorerDriver
             WindowsAppFriend.SetCustomSerializer<CustomSerializer>();
 
             // FastExplorerアプリケーションを起動
-            Process process = Process.Start(ExePath);
+            Process process = Process.Start(new ProcessStartInfo
+            {
+                FileName = ExePath,
+                UseShellExecute = false
+            }) ?? throw new InvalidOperationException($"Failed to start process: {ExePath}");
             // Friendlyでアプリケーションに接続
             WindowsAppFriend = new WindowsAppFriend(process);
+
+            // テスト用ユーティリティをターゲットプロセスへ注入（ビジュアルツリー探索など）
+            WindowsAppFriend.LoadAssembly(typeof(VisualTreeSearch).Assembly);
             // メインウィンドウを取得
             var window = WindowsAppFriend.WaitForIdentifyFromTypeFullName("FastExplorer.Views.Windows.MainWindow");
-            MainWindow = new MainWindowDriver(window);
+            MainWindow = new MainWindowDriver(WindowsAppFriend, window);
         }
 
         public void Release()
@@ -38,6 +48,28 @@ namespace FastExplorerDriver
             {
                 // クリーンアップ時のエラーは無視
             }
+        }
+
+        private static string ResolveExePath()
+        {
+            // テスト実行場所（bin/Debug/...）を基準に FastExplorer のビルド成果物を探す。
+            // ※パスを固定すると SDK/Windows SDK バージョンで崩れやすいので、探索で解決する。
+            var baseDir = AppContext.BaseDirectory;
+            var repoRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", ".."));
+            var binRoot = Path.Combine(repoRoot, "FastExplorer", "FastExplorer", "bin");
+
+            if (!Directory.Exists(binRoot))
+                throw new DirectoryNotFoundException($"FastExplorer bin folder not found: {binRoot}");
+
+            var exeCandidates = Directory.EnumerateFiles(binRoot, "FastExplorer.exe", SearchOption.AllDirectories)
+                .Select(p => new FileInfo(p))
+                .OrderByDescending(f => f.LastWriteTimeUtc)
+                .ToList();
+
+            if (exeCandidates.Count == 0)
+                throw new FileNotFoundException($"FastExplorer.exe not found under: {binRoot}");
+
+            return exeCandidates[0].FullName;
         }
     }
 }

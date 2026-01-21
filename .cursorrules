@@ -20,18 +20,28 @@ Project:
 # ============================================================
 - The full Friendly source code is available locally and may be referenced:
   C:\Users\kobayashi\source\repos\Friendly.Windows
-- When designing drivers or test utilities, you may refer to actual
-  implementations, patterns, and APIs found in this repository.
-- Prefer aligning with the local Friendly source over generic or online examples.
+- When designing drivers or test utilities, prefer actual implementations
+  found in this repository over generic or online examples.
 
 # ============================================================
 # FastExplorer specification reference (MUST)
 # ============================================================
-- FastExplorer functional specifications are documented in Markdown files located at:
+- FastExplorer functional specifications are documented in Markdown files at:
   C:\Users\kobayashi\source\repos\FastExplorer\FastExplorer\Doc\01.仕様\*.md
-- When creating or modifying UI tests, always confirm expected behavior
-  against these specification documents.
-- Test names and assertions should reflect the terminology used in the specs.
+- When creating or modifying UI tests, confirm expected behavior against
+  these specification documents.
+- Test names, assertions, and comments should reflect the terminology
+  used in the specs.
+
+# ============================================================
+# FastExplorer application source reference (MUST)
+# ============================================================
+- The FastExplorer application source code is available locally at:
+  C:\Users\kobayashi\source\repos\FastExplorer\FastExplorer
+- UI tests and drivers may be designed by inspecting actual View, ViewModel,
+  and control implementations in this source.
+- Prefer real control structure, AutomationId, and binding behavior
+  over assumptions.
 
 # ============================================================
 # MSTest style rules (MUST)

@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using Codeer.Friendly;
 using Codeer.Friendly.Dynamic;
 using Codeer.Friendly.Windows;
@@ -87,6 +88,28 @@ namespace FastExplorerDriver
         {
             dynamic finder = _app.Type<VisualTreeSearch>();
             return (AppVar?)finder.FindByName(_page, name);
+        }
+
+        public bool GetIsPathTextBoxNormalVisible()
+        {
+            if (IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is enabled.");
+
+            var textBox = FindByName("PathTextBoxNormal")
+                          ?? throw new InvalidOperationException("PathTextBoxNormal not found.");
+            dynamic d = textBox.Dynamic();
+            return (Visibility)d.Visibility == Visibility.Visible;
+        }
+
+        public string GetPathTextBoxNormalText()
+        {
+            if (IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is enabled.");
+
+            var textBox = FindByName("PathTextBoxNormal")
+                          ?? throw new InvalidOperationException("PathTextBoxNormal not found.");
+            dynamic d = textBox.Dynamic();
+            return (string)d.Text;
         }
 
         private bool GetIsSplitPaneEnabled()

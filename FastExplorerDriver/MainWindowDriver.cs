@@ -135,5 +135,11 @@ namespace FastExplorerDriver
             dynamic tabVm = GetCurrentExplorerTabViewModel();
             return (bool)tabVm.CanGoForward;
         }
+
+        public bool GetIsHomePage()
+        {
+            dynamic tabVm = GetCurrentExplorerTabViewModel();
+            return (bool)tabVm.IsHomePage;
+        }
     }
 }

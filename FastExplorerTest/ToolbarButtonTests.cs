@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using FastExplorerDriver;
 
@@ -74,6 +75,114 @@ namespace FastExplorerTest
             Assert.IsFalse(_app.MainWindow.GetIsHomePage());
         }
 
+        [TestMethod]
+        public void 戻る_進むボタンの有効状態と履歴遷移が一致する_単一ペイン()
+        {
+            EnsureSinglePane();
+
+            var pathA = NormalizeDir(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
+            var pathB = NormalizeDir(Environment.SystemDirectory);
+
+            _app.MainWindow.NavigateToPath(pathA);
+            WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == pathA, TimeSpan.FromSeconds(15));
+
+            _app.MainWindow.NavigateToPath(pathB);
+            WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == pathB, TimeSpan.FromSeconds(15));
+
+            WaitUntil(() => _app.MainWindow.GetCanGoBack() && _app.MainWindow.ExplorerPage.Toolbar.Back.IsEnabled, TimeSpan.FromSeconds(10));
+
+            _app.MainWindow.ExplorerPage.Toolbar.Back.Click();
+            WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == pathA, TimeSpan.FromSeconds(15));
+
+            WaitUntil(() => _app.MainWindow.GetCanGoForward() && _app.MainWindow.ExplorerPage.Toolbar.Forward.IsEnabled, TimeSpan.FromSeconds(10));
+
+            _app.MainWindow.ExplorerPage.Toolbar.Forward.Click();
+            WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == pathB, TimeSpan.FromSeconds(15));
+        }
+
+        [TestMethod]
+        public void 表示モードボタンでコンテキストメニューが開く_単一ペイン()
+        {
+            EnsureSinglePane();
+
+            _app.MainWindow.ExplorerPage.CloseViewModeContextMenuNormal();
+            WaitUntil(() => !_app.MainWindow.ExplorerPage.GetIsViewModeContextMenuNormalOpen(), TimeSpan.FromSeconds(5));
+
+            _app.MainWindow.ExplorerPage.Toolbar.ViewMode.Click();
+            WaitUntil(() => _app.MainWindow.ExplorerPage.GetIsViewModeContextMenuNormalOpen(), TimeSpan.FromSeconds(10));
+
+            _app.MainWindow.ExplorerPage.CloseViewModeContextMenuNormal();
+            WaitUntil(() => !_app.MainWindow.ExplorerPage.GetIsViewModeContextMenuNormalOpen(), TimeSpan.FromSeconds(5));
+        }
+
+        [TestMethod]
+        public void 上へボタンで親ディレクトリに移動できる_単一ペイン()
+        {
+            EnsureSinglePane();
+
+            var start = NormalizeDir(Environment.SystemDirectory);
+            var parent = NormalizeDir(Directory.GetParent(start)!.FullName);
+
+            _app.MainWindow.NavigateToPath(start);
+            WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == start, TimeSpan.FromSeconds(15));
+
+            _app.MainWindow.ExplorerPage.Toolbar.Up.Click();
+
+            WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == parent, TimeSpan.FromSeconds(15));
+        }
+
+        [TestMethod]
+        public void お気に入りボタンでピン止めに追加され削除できる_単一ペイン()
+        {
+            EnsureSinglePane();
+
+            var testRoot = Path.Combine(@"D:\FastExplorerTest", "FavoriteButton");
+            Directory.CreateDirectory(testRoot);
+
+            try
+            {
+                _app.MainWindow.NavigateToPath(testRoot);
+                WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == NormalizeDir(testRoot), TimeSpan.FromSeconds(15));
+
+                _app.MainWindow.ExplorerPage.Toolbar.AddToFavorites.Click();
+
+                WaitUntil(() => FavoritesFileContainsPath(testRoot), TimeSpan.FromSeconds(15));
+            }
+            finally
+            {
+                try
+                {
+                    _app.RemoveFavoriteByPath(testRoot);
+                    WaitUntil(() => !FavoritesFileContainsPath(testRoot), TimeSpan.FromSeconds(10));
+                }
+                catch
+                {
+                    // クリーンアップ時のエラーは無視
+                }
+
+                try
+                {
+                    var fallback = NormalizeDir(Environment.SystemDirectory);
+                    _app.MainWindow.NavigateToPath(fallback);
+                    WaitUntil(() => NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == fallback, TimeSpan.FromSeconds(15));
+                }
+                catch
+                {
+                    // クリーンアップ時のエラーは無視
+                }
+
+                try
+                {
+                    if (Directory.Exists(testRoot))
+                        Directory.Delete(testRoot, true);
+                }
+                catch
+                {
+                    // クリーンアップ時のエラーは無視
+                }
+            }
+        }
+
         private void EnsureSinglePane()
         {
             WaitUntil(() => _app.MainWindow.ExplorerPage.FindByName("SinglePaneTabControl") != null
@@ -99,6 +208,49 @@ namespace FastExplorerTest
         {
             var full = Path.GetFullPath(path);
             return full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
+        private static string GetFavoritesFilePath()
+        {
+            var appDataPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FastExplorer");
+            return Path.Combine(appDataPath, "favorites.json");
+        }
+
+        private static bool FavoritesFileContainsPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            var filePath = GetFavoritesFilePath();
+            if (!File.Exists(filePath))
+                return false;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(File.ReadAllText(filePath));
+                if (doc.RootElement.ValueKind != JsonValueKind.Array)
+                    return false;
+
+                var target = NormalizeDir(path);
+                foreach (var item in doc.RootElement.EnumerateArray())
+                {
+                    if (!item.TryGetProperty("Path", out var pathProp))
+                        continue;
+                    var value = pathProp.GetString();
+                    if (string.IsNullOrWhiteSpace(value))
+                        continue;
+                    if (NormalizeDir(value).Equals(target, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+
+            return false;
         }
     }
 }

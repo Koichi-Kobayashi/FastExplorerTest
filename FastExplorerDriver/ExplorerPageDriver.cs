@@ -112,6 +112,34 @@ namespace FastExplorerDriver
             return (string)d.Text;
         }
 
+        public bool GetIsViewModeContextMenuNormalOpen()
+        {
+            if (IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is enabled.");
+
+            var button = FindByName("ViewModeButtonNormal")
+                         ?? throw new InvalidOperationException("ViewModeButtonNormal not found.");
+            dynamic d = button.Dynamic();
+            var contextMenu = d.ContextMenu;
+            if (contextMenu == null)
+                return false;
+            return (bool)contextMenu.IsOpen;
+        }
+
+        public void CloseViewModeContextMenuNormal()
+        {
+            if (IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is enabled.");
+
+            var button = FindByName("ViewModeButtonNormal")
+                         ?? throw new InvalidOperationException("ViewModeButtonNormal not found.");
+            dynamic d = button.Dynamic();
+            var contextMenu = d.ContextMenu;
+            if (contextMenu == null)
+                return;
+            contextMenu.IsOpen = false;
+        }
+
         private bool GetIsSplitPaneEnabled()
         {
             dynamic d = _page.Dynamic();

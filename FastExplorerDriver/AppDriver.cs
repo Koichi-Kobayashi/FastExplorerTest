@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -48,6 +48,25 @@ namespace FastExplorerDriver
             {
                 // クリーンアップ時のエラーは無視
             }
+        }
+
+        public void RemoveFavoriteByPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                throw new ArgumentException("Path is empty.", nameof(path));
+
+            dynamic appType = WindowsAppFriend.Type("FastExplorer.App");
+            dynamic services = appType.Services;
+            dynamic favoriteServiceType = WindowsAppFriend.Type("System.Type")
+                .GetType("FastExplorer.Services.FavoriteService, FastExplorer");
+            if (favoriteServiceType == null)
+                throw new InvalidOperationException("FavoriteService type not found.");
+
+            dynamic favoriteService = services.GetService(favoriteServiceType);
+            if (favoriteService == null)
+                throw new InvalidOperationException("FavoriteService not found.");
+
+            favoriteService.RemoveFavoriteByPath(path);
         }
 
         public WindowControl WaitForWindow(string typeFullName)

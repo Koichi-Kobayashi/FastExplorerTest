@@ -137,6 +137,7 @@ namespace FastExplorerTest
             EnsureSinglePane();
 
             var testRoot = Path.Combine(@"D:\FastExplorerTest", "FavoriteButton");
+            var favoriteName = new DirectoryInfo(testRoot).Name;
             Directory.CreateDirectory(testRoot);
 
             try
@@ -147,6 +148,13 @@ namespace FastExplorerTest
                 _app.MainWindow.ExplorerPage.Toolbar.AddToFavorites.Click();
 
                 WaitUntil(() => FavoritesFileContainsPath(testRoot), TimeSpan.FromSeconds(15));
+
+                _app.MainWindow.OpenNavigationPane();
+                _app.MainWindow.ExpandPinnedGroup();
+                _app.MainWindow.RightClickNavigationItem(favoriteName);
+                _app.MainWindow.OpenNavigationItemContextMenu(favoriteName);
+                Assert.IsTrue(_app.MainWindow.ClickNavigationItemContextMenuByHeaderContains(favoriteName, "削除"));
+                WaitUntil(() => !FavoritesFileContainsPath(testRoot), TimeSpan.FromSeconds(15));
             }
             finally
             {

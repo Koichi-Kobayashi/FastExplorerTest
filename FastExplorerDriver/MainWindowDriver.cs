@@ -42,6 +42,45 @@ namespace FastExplorerDriver
             return (AppVar?)finder.FindByTypeFullName(AppVar, typeFullName);
         }
 
+        public void OpenNavigationPane()
+        {
+            var nav = FindByName("RootNavigation") ?? throw new InvalidOperationException("RootNavigation not found.");
+            dynamic d = nav.Dynamic();
+            d.IsPaneOpen = true;
+        }
+
+        public void ExpandPinnedGroup()
+        {
+            var item = FindNavigationViewItemByContent("ピン留め")
+                       ?? throw new InvalidOperationException("Pinned group not found.");
+            dynamic d = item.Dynamic();
+            d.IsExpanded = true;
+        }
+
+        public void RightClickNavigationItem(string contentText)
+        {
+            var item = FindNavigationViewItemByContent(contentText)
+                       ?? throw new InvalidOperationException($"NavigationViewItem not found. content={contentText}");
+            dynamic finder = _app.Type<VisualTreeSearch>();
+            finder.RaiseRightClick(item);
+        }
+
+        public bool OpenNavigationItemContextMenu(string contentText)
+        {
+            var item = FindNavigationViewItemByContent(contentText)
+                       ?? throw new InvalidOperationException($"NavigationViewItem not found. content={contentText}");
+            dynamic finder = _app.Type<VisualTreeSearch>();
+            return (bool)finder.OpenContextMenu(item);
+        }
+
+        public bool ClickNavigationItemContextMenuByHeaderContains(string contentText, string headerContains)
+        {
+            var item = FindNavigationViewItemByContent(contentText)
+                       ?? throw new InvalidOperationException($"NavigationViewItem not found. content={contentText}");
+            dynamic finder = _app.Type<VisualTreeSearch>();
+            return (bool)finder.ClickContextMenuItemByHeaderContains(item, headerContains);
+        }
+
         private dynamic GetExplorerPageViewModel()
         {
             var page = FindByTypeFullName("FastExplorer.Views.Pages.ExplorerPage");
@@ -140,6 +179,16 @@ namespace FastExplorerDriver
         {
             dynamic tabVm = GetCurrentExplorerTabViewModel();
             return (bool)tabVm.IsHomePage;
+        }
+
+        private AppVar? FindNavigationViewItemByContent(string contentText)
+        {
+            var nav = FindByName("RootNavigation");
+            if (nav == null)
+                return null;
+
+            dynamic finder = _app.Type<VisualTreeSearch>();
+            return (AppVar?)finder.FindByTypeFullNameAndContentText(nav, "Wpf.Ui.Controls.NavigationViewItem", contentText);
         }
     }
 }

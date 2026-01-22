@@ -20,6 +20,9 @@ namespace FastExplorerDriver
         private readonly WindowsAppFriend _app;
         private readonly AppVar _page;
 
+        /// <summary>
+        /// ExplorerPage の操作対象を初期化します。
+        /// </summary>
         public ExplorerPageDriver(WindowsAppFriend app, AppVar page)
         {
             _app = app ?? throw new ArgumentNullException(nameof(app));
@@ -49,6 +52,9 @@ namespace FastExplorerDriver
 
         public WPFMenuBaseGenerator CustomMenu => Core.VisualTreeWithPopup().ByType("FastExplorer.ShellContextMenu.ListViewEmptyAreaContextMenu").SingleOrDefault().Dynamic();
 
+        /// <summary>
+        /// アクティブペインのプレビューペイン表示状態を取得します。
+        /// </summary>
         public bool GetIsPreviewPaneVisibleActive()
         {
             dynamic vm = GetExplorerPageViewModel();
@@ -56,6 +62,9 @@ namespace FastExplorerDriver
             return (bool)tabVm.IsPreviewPaneVisible;
         }
 
+        /// <summary>
+        /// 左ペインのプレビューペイン表示状態を取得します。
+        /// </summary>
         public bool GetIsPreviewPaneVisibleLeft()
         {
             dynamic vm = GetExplorerPageViewModel();
@@ -65,6 +74,9 @@ namespace FastExplorerDriver
             return (bool)tabVm.IsPreviewPaneVisible;
         }
 
+        /// <summary>
+        /// 右ペインのプレビューペイン表示状態を取得します。
+        /// </summary>
         public bool GetIsPreviewPaneVisibleRight()
         {
             dynamic vm = GetExplorerPageViewModel();
@@ -74,6 +86,9 @@ namespace FastExplorerDriver
             return (bool)tabVm.IsPreviewPaneVisible;
         }
 
+        /// <summary>
+        /// 左ペインの現在パスを取得します。
+        /// </summary>
         public string? GetCurrentPathLeft()
         {
             dynamic vm = GetExplorerPageViewModel();
@@ -82,6 +97,9 @@ namespace FastExplorerDriver
             return (string)vm.SelectedLeftPaneTab.ViewModel.CurrentPath;
         }
 
+        /// <summary>
+        /// 右ペインの現在パスを取得します。
+        /// </summary>
         public string? GetCurrentPathRight()
         {
             dynamic vm = GetExplorerPageViewModel();
@@ -90,12 +108,18 @@ namespace FastExplorerDriver
             return (string)vm.SelectedRightPaneTab.ViewModel.CurrentPath;
         }
 
+        /// <summary>
+        /// ExplorerPage 配下から名前で要素を検索します。
+        /// </summary>
         public AppVar? FindByName(string name)
         {
             dynamic finder = _app.Type<VisualTreeSearch>();
             return (AppVar?)finder.FindByName(_page, name);
         }
 
+        /// <summary>
+        /// 単一ペインの一覧空白領域を右クリックします。
+        /// </summary>
         public void RightClickFileListEmptyAreaSinglePane()
         {
             if (IsSplitPaneEnabled)
@@ -110,6 +134,9 @@ namespace FastExplorerDriver
             finder.RaiseRightClick(target);
         }
 
+        /// <summary>
+        /// 一覧空白領域のコンテキストメニューが開いているか確認します。
+        /// </summary>
         public bool IsListViewEmptyAreaContextMenuOpen()
         {
             var menu = GetListViewEmptyAreaContextMenu();
@@ -127,6 +154,9 @@ namespace FastExplorerDriver
             }
         }
 
+        /// <summary>
+        /// 一覧空白領域のコンテキストメニューで「新規作成」サブメニューを開きます。
+        /// </summary>
         public bool OpenNewSubMenuFromContextMenu()
         {
             var menu = GetListViewEmptyAreaContextMenu()
@@ -139,6 +169,9 @@ namespace FastExplorerDriver
             return (bool)d.IsSubmenuOpen;
         }
 
+        /// <summary>
+        /// 「新規作成」サブメニューが開いているか確認します。
+        /// </summary>
         public bool IsNewSubMenuOpen()
         {
             var menu = GetListViewEmptyAreaContextMenu();
@@ -161,6 +194,9 @@ namespace FastExplorerDriver
             }
         }
 
+        /// <summary>
+        /// 新規作成のサブメニューから「フォルダー」をクリックします。
+        /// </summary>
         public void ClickNewFolderFromContextMenu()
         {
             var menu = GetListViewEmptyAreaContextMenu()
@@ -178,6 +214,28 @@ namespace FastExplorerDriver
 
         }
 
+        /// <summary>
+        /// 新規作成のサブメニューから「テキスト ドキュメント」をクリックします。
+        /// </summary>
+        public void ClickNewTextDocumentFromContextMenu()
+        {
+            var menu = GetListViewEmptyAreaContextMenu()
+                       ?? throw new InvalidOperationException("ListViewEmptyAreaContextMenu not found.");
+            dynamic finder = _app.Type<VisualTreeSearch>();
+            var newMenu = (AppVar?)finder.FindMenuItemByName(menu, "NewMenuItem")
+                         ?? throw new InvalidOperationException("NewMenuItem not found.");
+            dynamic newMenuDynamic = newMenu.Dynamic();
+            newMenuDynamic.IsSubmenuOpen = true;
+            var newTextDocument = (AppVar?)finder.FindMenuItemByName(menu, "NewTextDocumentMenuItem");
+            if (newTextDocument == null)
+                throw new InvalidOperationException("NewTextDocumentMenuItem not found.");
+            if (!(bool)finder.InvokeMenuItemClick(newTextDocument))
+                throw new InvalidOperationException("NewTextDocumentMenuItem click failed.");
+        }
+
+        /// <summary>
+        /// 単一ペインでリネーム用テキストボックスが表示されているか確認します。
+        /// </summary>
         public bool IsRenameTextBoxVisibleSinglePane()
         {
             if (IsSplitPaneEnabled)
@@ -188,6 +246,9 @@ namespace FastExplorerDriver
             return IsRenameTextBoxVisible(listView) || IsRenameTextBoxVisible(dataGrid);
         }
 
+        /// <summary>
+        /// 単一ペインのパステキストボックスが表示されているか確認します。
+        /// </summary>
         public bool GetIsPathTextBoxNormalVisible()
         {
             if (IsSplitPaneEnabled)
@@ -199,6 +260,9 @@ namespace FastExplorerDriver
             return (Visibility)d.Visibility == Visibility.Visible;
         }
 
+        /// <summary>
+        /// 単一ペインのパステキストボックスの内容を取得します。
+        /// </summary>
         public string GetPathTextBoxNormalText()
         {
             if (IsSplitPaneEnabled)
@@ -210,6 +274,9 @@ namespace FastExplorerDriver
             return (string)d.Text;
         }
 
+        /// <summary>
+        /// アクティブタブで選択されているアイテム名を取得します。
+        /// </summary>
         public string? GetSelectedItemNameActive()
         {
             try
@@ -227,6 +294,9 @@ namespace FastExplorerDriver
             }
         }
 
+        /// <summary>
+        /// 単一ペインのファイル一覧にフォーカスがあるかを確認します。
+        /// </summary>
         public bool IsFileListFocusedSinglePane()
         {
             if (IsSplitPaneEnabled)
@@ -237,6 +307,9 @@ namespace FastExplorerDriver
             return IsKeyboardFocusWithin(listView) || IsKeyboardFocusWithin(dataGrid);
         }
 
+        /// <summary>
+        /// 空白領域のコンテキストメニューを取得します。
+        /// </summary>
         private AppVar? GetListViewEmptyAreaContextMenu()
         {
             dynamic finder = _app.Type<VisualTreeSearch>();
@@ -244,6 +317,9 @@ namespace FastExplorerDriver
                 "FastExplorer.ShellContextMenu.ListViewEmptyAreaContextMenu");
         }
 
+        /// <summary>
+        /// 表示中の一覧コントロールを選択します。
+        /// </summary>
         private AppVar? SelectVisibleElement(AppVar? listView, AppVar? dataGrid)
         {
             if (IsVisibleElement(listView))
@@ -253,6 +329,9 @@ namespace FastExplorerDriver
             return listView ?? dataGrid;
         }
 
+        /// <summary>
+        /// 要素が可視かどうかを判定します。
+        /// </summary>
         private static bool IsVisibleElement(AppVar? element)
         {
             if (element == null)
@@ -262,6 +341,9 @@ namespace FastExplorerDriver
             return (bool)d.IsVisible;
         }
 
+        /// <summary>
+        /// 要素または配下にキーボードフォーカスがあるか確認します。
+        /// </summary>
         private static bool IsKeyboardFocusWithin(AppVar? element)
         {
             if (element == null)
@@ -278,6 +360,9 @@ namespace FastExplorerDriver
             }
         }
 
+        /// <summary>
+        /// 指定ルート配下でリネーム用テキストボックスが表示されているか確認します。
+        /// </summary>
         private bool IsRenameTextBoxVisible(AppVar? root)
         {
             if (root == null)
@@ -292,6 +377,9 @@ namespace FastExplorerDriver
             return editingCell != null;
         }
 
+        /// <summary>
+        /// 表示モードボタンのコンテキストメニューが開いているか確認します。
+        /// </summary>
         public bool GetIsViewModeContextMenuNormalOpen()
         {
             if (IsSplitPaneEnabled)
@@ -306,6 +394,9 @@ namespace FastExplorerDriver
             return (bool)contextMenu.IsOpen;
         }
 
+        /// <summary>
+        /// 表示モードボタンのコンテキストメニューを閉じます。
+        /// </summary>
         public void CloseViewModeContextMenuNormal()
         {
             if (IsSplitPaneEnabled)
@@ -320,6 +411,9 @@ namespace FastExplorerDriver
             contextMenu.IsOpen = false;
         }
 
+        /// <summary>
+        /// 分割ペインが有効かどうかを取得します。
+        /// </summary>
         private bool GetIsSplitPaneEnabled()
         {
             dynamic d = _page.Dynamic();
@@ -327,12 +421,18 @@ namespace FastExplorerDriver
             return (bool)vm.IsSplitPaneEnabled;
         }
 
+        /// <summary>
+        /// ExplorerPage の ViewModel を取得します。
+        /// </summary>
         private dynamic GetExplorerPageViewModel()
         {
             dynamic d = _page.Dynamic();
             return d.ViewModel;
         }
 
+        /// <summary>
+        /// アクティブペインのタブ ViewModel を取得します。
+        /// </summary>
         private static dynamic GetActivePaneTabViewModel(dynamic explorerPageViewModel)
         {
             // ExplorerPage.xaml.cs の ActivePane は 0=Left / 2=Right
@@ -350,6 +450,9 @@ namespace FastExplorerDriver
             return tab.ViewModel;
         }
 
+        /// <summary>
+        /// アクティブペインの TabControl を取得します。
+        /// </summary>
         private AppVar GetActivePaneTabControlRoot()
         {
             // ボタンは各ペインの TabControl 配下（Template展開後）に存在するので、
@@ -365,6 +468,9 @@ namespace FastExplorerDriver
             return FindByName("SinglePaneTabControl") ?? throw new InvalidOperationException("TabControl not found. name=SinglePaneTabControl");
         }
 
+        /// <summary>
+        /// 指定ペインの TabControl を取得します。
+        /// </summary>
         private AppVar GetPaneTabControlRoot(int pane)
         {
             if (!IsSplitPaneEnabled)

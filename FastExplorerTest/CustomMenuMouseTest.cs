@@ -75,5 +75,56 @@ public sealed class CustomMenuMouseTest
         }
     }
 
+    [TestMethod]
+    public void 右クリック新規作成メニューからテキストドキュメントを作成できる()
+    {
+        TestHelpers.EnsureSinglePane(_app);
+
+        var root = @"D:\FastExplorerTest";
+        Directory.CreateDirectory(root);
+
+        _app.MainWindow.NavigateToPath(root);
+        TestHelpers.WaitUntil(() => TestHelpers.NormalizeDir(_app.MainWindow.GetCurrentPath() ?? "") == TestHelpers.NormalizeDir(root), TimeSpan.FromSeconds(15));
+
+        var beforeFiles = Directory.GetFiles(root);
+
+        _app.MainWindow.ExplorerPage.RightClickFileListEmptyAreaSinglePane();
+        TestHelpers.WaitUntil(() => _app.MainWindow.ExplorerPage.IsListViewEmptyAreaContextMenuOpen(), TimeSpan.FromSeconds(10));
+
+        Assert.IsTrue(_app.MainWindow.ExplorerPage.OpenNewSubMenuFromContextMenu());
+        TestHelpers.WaitUntil(() => _app.MainWindow.ExplorerPage.IsNewSubMenuOpen(), TimeSpan.FromSeconds(5));
+
+        _app.MainWindow.ExplorerPage.ClickNewTextDocumentFromContextMenu();
+        TestHelpers.WaitForObservation(TimeSpan.FromSeconds(5));
+
+        // コンテキストメニューが閉じるのを待つ
+        TestHelpers.WaitUntil(() => !_app.MainWindow.ExplorerPage.IsListViewEmptyAreaContextMenuOpen(), TimeSpan.FromSeconds(5));
+
+        TestHelpers.WaitUntil(() => Directory.GetFiles(root).Length > beforeFiles.Length, TimeSpan.FromSeconds(5));
+
+        var afterFiles = Directory.GetFiles(root);
+        var newFiles = afterFiles.Except(beforeFiles, StringComparer.OrdinalIgnoreCase).ToArray();
+        Assert.AreEqual(1, newFiles.Length, "新規テキストドキュメントを特定できません。");
+
+        var newFileName = Path.GetFileName(newFiles[0]);
+        Assert.AreEqual("新しいテキスト ドキュメント.txt", newFileName, "ファイル名が期待値と一致しません。");
+        TestHelpers.WaitUntil(() => string.Equals(_app.MainWindow.ExplorerPage.GetSelectedItemNameActive(), newFileName, StringComparison.OrdinalIgnoreCase), TimeSpan.FromSeconds(10));
+        TestHelpers.WaitUntil(() => _app.MainWindow.ExplorerPage.IsRenameTextBoxVisibleSinglePane(), TimeSpan.FromSeconds(10));
+        Assert.IsTrue(_app.MainWindow.ExplorerPage.IsRenameTextBoxVisibleSinglePane(), "リネームモードになっていません。");
+        Assert.IsTrue(_app.MainWindow.ExplorerPage.IsFileListFocusedSinglePane(), "新規テキストドキュメントにフォーカスがありません。");
+
+        foreach (var file in newFiles)
+        {
+            try
+            {
+                File.Delete(file);
+            }
+            catch
+            {
+                // クリーンアップ時のエラーは無視
+            }
+        }
+    }
+
 
 }

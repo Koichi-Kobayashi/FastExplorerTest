@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <FASTEXPLORER_TEST_OBSERVE>1</FASTEXPLORER_TEST_OBSERVE>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>

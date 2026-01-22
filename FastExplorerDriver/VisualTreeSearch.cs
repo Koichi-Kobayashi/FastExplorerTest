@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -44,6 +45,33 @@ namespace FastExplorerDriver
             return null;
         }
 
+        public static DependencyObject? FindVisibleByName(DependencyObject root, string name)
+        {
+            if (root == null || string.IsNullOrEmpty(name))
+                return null;
+
+            var queue = new Queue<DependencyObject>();
+            queue.Enqueue(root);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+
+                if (current is FrameworkElement fe && fe.Name == name && fe.Visibility == Visibility.Visible)
+                    return fe;
+
+                int count = VisualTreeHelper.GetChildrenCount(current);
+                for (int i = 0; i < count; i++)
+                {
+                    var child = VisualTreeHelper.GetChild(current, i);
+                    if (child != null)
+                        queue.Enqueue(child);
+                }
+            }
+
+            return null;
+        }
+
         public static DependencyObject? FindByTypeFullName(DependencyObject root, string typeFullName)
         {
             if (root == null || string.IsNullOrEmpty(typeFullName))
@@ -67,6 +95,29 @@ namespace FastExplorerDriver
                     if (child != null)
                         queue.Enqueue(child);
                 }
+            }
+
+            return null;
+        }
+
+        public static DependencyObject? FindInAllPresentationSourcesByTypeFullName(string typeFullName)
+        {
+            if (string.IsNullOrEmpty(typeFullName))
+                return null;
+
+            var sources = PresentationSource.CurrentSources;
+            if (sources == null)
+                return null;
+
+            foreach (PresentationSource source in sources)
+            {
+                var root = source.RootVisual as DependencyObject;
+                if (root == null)
+                    continue;
+
+                var found = FindByTypeFullName(root, typeFullName);
+                if (found != null)
+                    return found;
             }
 
             return null;
@@ -105,6 +156,30 @@ namespace FastExplorerDriver
             return null;
         }
 
+        public static DependencyObject? FindMenuItemByName(DependencyObject root, string name)
+        {
+            if (root == null || string.IsNullOrEmpty(name))
+                return null;
+
+            if (root is ItemsControl itemsControl)
+            {
+                foreach (var item in itemsControl.Items)
+                {
+                    if (item is MenuItem menuItem)
+                    {
+                        if (menuItem.Name == name)
+                            return menuItem;
+
+                        var nested = FindMenuItemByName(menuItem, name);
+                        if (nested != null)
+                            return nested;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public static void RaiseRightClick(DependencyObject target)
         {
             if (target is not UIElement element)
@@ -123,6 +198,60 @@ namespace FastExplorerDriver
                 Source = element
             };
             element.RaiseEvent(up);
+        }
+
+        public static bool InvokeMenuItemClick(DependencyObject target)
+        {
+            if (target is MenuItem menuItem)
+            {
+                return menuItem.Dispatcher.Invoke(() =>
+                {
+                    menuItem.Focus();
+                    var down = new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
+                    {
+                        RoutedEvent = UIElement.MouseLeftButtonDownEvent,
+                        Source = menuItem
+                    };
+                    menuItem.RaiseEvent(down);
+
+                    var up = new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
+                    {
+                        RoutedEvent = UIElement.MouseLeftButtonUpEvent,
+                        Source = menuItem
+                    };
+                    menuItem.RaiseEvent(up);
+
+                    if (menuItem.Command != null && menuItem.Command.CanExecute(menuItem.CommandParameter))
+                        menuItem.Command.Execute(menuItem.CommandParameter);
+
+                    menuItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent, menuItem));
+                    return true;
+                }, System.Windows.Threading.DispatcherPriority.Input);
+            }
+
+            if (target is FrameworkElement element)
+            {
+                return element.Dispatcher.Invoke(() =>
+                {
+                    element.Focus();
+                    element.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent, element));
+                    return true;
+                }, System.Windows.Threading.DispatcherPriority.Input);
+            }
+
+            return false;
+        }
+
+        public static bool InvokeMenuItemClickByName(DependencyObject root, string name)
+        {
+            if (root == null || string.IsNullOrEmpty(name))
+                return false;
+
+            var target = FindByName(root, name);
+            if (target == null)
+                return false;
+
+            return InvokeMenuItemClick(target);
         }
 
         public static bool OpenContextMenu(DependencyObject owner)

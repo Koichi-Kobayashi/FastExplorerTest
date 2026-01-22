@@ -52,12 +52,16 @@ public sealed class CustomMenuMouseTest
         TestHelpers.WaitUntil(() => !_app.MainWindow.ExplorerPage.IsListViewEmptyAreaContextMenuOpen(), TimeSpan.FromSeconds(5));
 
         TestHelpers.WaitUntil(() => Directory.GetDirectories(root).Length > beforeDirs.Length, TimeSpan.FromSeconds(5));
-        TestHelpers.WaitUntil(() => _app.MainWindow.ExplorerPage.IsRenameTextBoxVisibleSinglePane(), TimeSpan.FromSeconds(10));
-
-        Assert.IsTrue(_app.MainWindow.ExplorerPage.IsRenameTextBoxVisibleSinglePane());
 
         var afterDirs = Directory.GetDirectories(root);
         var newDirs = afterDirs.Except(beforeDirs, StringComparer.OrdinalIgnoreCase).ToArray();
+        Assert.AreEqual(1, newDirs.Length, "新規フォルダーを特定できません。");
+
+        var newFolderName = Path.GetFileName(newDirs[0]);
+        TestHelpers.WaitUntil(() => string.Equals(_app.MainWindow.ExplorerPage.GetSelectedItemNameActive(), newFolderName, StringComparison.OrdinalIgnoreCase), TimeSpan.FromSeconds(10));
+        TestHelpers.WaitUntil(() => _app.MainWindow.ExplorerPage.IsRenameTextBoxVisibleSinglePane(), TimeSpan.FromSeconds(10));
+        Assert.IsTrue(_app.MainWindow.ExplorerPage.IsRenameTextBoxVisibleSinglePane(), "リネームモードになっていません。");
+        Assert.IsTrue(_app.MainWindow.ExplorerPage.IsFileListFocusedSinglePane(), "新規フォルダーにフォーカスがありません。");
         foreach (var dir in newDirs)
         {
             try

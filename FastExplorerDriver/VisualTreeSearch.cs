@@ -72,6 +72,60 @@ namespace FastExplorerDriver
             return null;
         }
 
+        public static DependencyObject? FindVisibleByTypeFullName(DependencyObject root, string typeFullName)
+        {
+            if (root == null || string.IsNullOrEmpty(typeFullName))
+                return null;
+
+            var queue = new Queue<DependencyObject>();
+            queue.Enqueue(root);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                var currentType = current.GetType();
+
+                if (currentType.FullName == typeFullName && current is UIElement element && element.IsVisible)
+                    return current;
+
+                int count = VisualTreeHelper.GetChildrenCount(current);
+                for (int i = 0; i < count; i++)
+                {
+                    var child = VisualTreeHelper.GetChild(current, i);
+                    if (child != null)
+                        queue.Enqueue(child);
+                }
+            }
+
+            return null;
+        }
+
+        public static DependencyObject? FindEditingDataGridCell(DependencyObject root)
+        {
+            if (root == null)
+                return null;
+
+            var queue = new Queue<DependencyObject>();
+            queue.Enqueue(root);
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                if (current is DataGridCell cell && cell.IsEditing && cell.IsVisible)
+                    return cell;
+
+                int count = VisualTreeHelper.GetChildrenCount(current);
+                for (int i = 0; i < count; i++)
+                {
+                    var child = VisualTreeHelper.GetChild(current, i);
+                    if (child != null)
+                        queue.Enqueue(child);
+                }
+            }
+
+            return null;
+        }
+
         public static DependencyObject? FindByTypeFullName(DependencyObject root, string typeFullName)
         {
             if (root == null || string.IsNullOrEmpty(typeFullName))
@@ -207,6 +261,13 @@ namespace FastExplorerDriver
                 return menuItem.Dispatcher.Invoke(() =>
                 {
                     menuItem.Focus();
+                    var onClick = typeof(MenuItem).GetMethod("OnClick", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    if (onClick != null)
+                    {
+                        onClick.Invoke(menuItem, Array.Empty<object>());
+                        return true;
+                    }
+
                     var down = new MouseButtonEventArgs(Mouse.PrimaryDevice, Environment.TickCount, MouseButton.Left)
                     {
                         RoutedEvent = UIElement.MouseLeftButtonDownEvent,

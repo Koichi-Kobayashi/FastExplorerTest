@@ -116,8 +116,15 @@ namespace FastExplorerDriver
             if (menu == null)
                 return false;
 
-            dynamic d = menu.Dynamic();
-            return (bool)d.IsOpen;
+            try
+            {
+                dynamic d = menu.Dynamic();
+                return (bool)d.IsOpen;
+            }
+            catch (FriendlyOperationException)
+            {
+                return false;
+            }
         }
 
         public bool OpenNewSubMenuFromContextMenu()
@@ -143,8 +150,15 @@ namespace FastExplorerDriver
             if (newMenu == null)
                 return false;
 
-            dynamic d = newMenu.Dynamic();
-            return (bool)d.IsSubmenuOpen;
+            try
+            {
+                dynamic d = newMenu.Dynamic();
+                return (bool)d.IsSubmenuOpen;
+            }
+            catch (FriendlyOperationException)
+            {
+                return false;
+            }
         }
 
         public void ClickNewFolderFromContextMenu()
@@ -196,6 +210,33 @@ namespace FastExplorerDriver
             return (string)d.Text;
         }
 
+        public string? GetSelectedItemNameActive()
+        {
+            try
+            {
+                dynamic vm = GetExplorerPageViewModel();
+                dynamic tabVm = GetActivePaneTabViewModel(vm);
+                var selectedItem = tabVm.SelectedItem;
+                if (selectedItem == null)
+                    return null;
+                return (string)selectedItem.Name;
+            }
+            catch (FriendlyOperationException)
+            {
+                return null;
+            }
+        }
+
+        public bool IsFileListFocusedSinglePane()
+        {
+            if (IsSplitPaneEnabled)
+                throw new InvalidOperationException("Split pane is enabled.");
+
+            var listView = FindByName("FileListView");
+            var dataGrid = FindByName("FileDataGrid");
+            return IsKeyboardFocusWithin(listView) || IsKeyboardFocusWithin(dataGrid);
+        }
+
         private AppVar? GetListViewEmptyAreaContextMenu()
         {
             dynamic finder = _app.Type<VisualTreeSearch>();
@@ -221,6 +262,22 @@ namespace FastExplorerDriver
             return (bool)d.IsVisible;
         }
 
+        private static bool IsKeyboardFocusWithin(AppVar? element)
+        {
+            if (element == null)
+                return false;
+
+            try
+            {
+                dynamic d = element.Dynamic();
+                return (bool)d.IsKeyboardFocusWithin;
+            }
+            catch (FriendlyOperationException)
+            {
+                return false;
+            }
+        }
+
         private bool IsRenameTextBoxVisible(AppVar? root)
         {
             if (root == null)
@@ -228,7 +285,11 @@ namespace FastExplorerDriver
 
             dynamic finder = _app.Type<VisualTreeSearch>();
             var found = (AppVar?)finder.FindVisibleByName(root, "FileNameTextBox");
-            return found != null;
+            if (found != null)
+                return true;
+
+            var editingCell = (AppVar?)finder.FindEditingDataGridCell(root);
+            return editingCell != null;
         }
 
         public bool GetIsViewModeContextMenuNormalOpen()

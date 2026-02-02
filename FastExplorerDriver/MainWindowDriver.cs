@@ -129,7 +129,7 @@ namespace FastExplorerDriver
 
         public int? GetBreadcrumbPanelChildrenCount()
         {
-            var breadcrumb = FindByName("BreadcrumbPanel");
+            var breadcrumb = FindByName("BreadcrumbPanel"); // パンくずリストのパネル
             if (breadcrumb == null)
                 return null;
 
